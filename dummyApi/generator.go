@@ -1,16 +1,15 @@
 package dummyapi
 
 import (
-    "github.com/gin-gonic/gin"
-    "dummy-api-generator/internal/generator"
-    "dummy-api-generator/internal/parser"
+	"github.com/DevMaan707/dummy-api-gen/internal/generator"
+	"github.com/DevMaan707/dummy-api-gen/internal/parser"
+	"github.com/gin-gonic/gin"
 )
 
-
 func GenerateAPIs(router *gin.Engine, modelsPath string) error {
-    parsedModels, err := parser.ParseModels(modelsPath)
-    if err != nil {
-        return err
-    }
-    return generator.SetupRoutes(router, parsedModels)
+	parsedModels, err := parser.ParseModels(modelsPath)
+	if err != nil {
+		return err
+	}
+	return generator.SetupRoutes(router, parsedModels)
 }
