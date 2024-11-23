@@ -1,6 +1,7 @@
 package shared
 
 type ModelData struct {
-	Name   string
-	Fields map[string]string
+	Name           string
+	RequestFields  map[string]string
+	ResponseFields map[string]string
 }

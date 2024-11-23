@@ -4,13 +4,13 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"strings"
 
-	validator "github.com/DevMaan707/dummy-api-gen/internal/generator"
 	"github.com/DevMaan707/dummy-api-gen/internal/shared"
 )
 
 func ParseModels(path string) ([]shared.ModelData, error) {
-	var models []shared.ModelData
+	models := map[string]*shared.ModelData{}
 	fs := token.NewFileSet()
 	pkgs, err := parser.ParseDir(fs, path, nil, parser.AllErrors)
 	if err != nil {
@@ -26,7 +26,14 @@ func ParseModels(path string) ([]shared.ModelData, error) {
 				}
 				for _, spec := range genDecl.Specs {
 					typeSpec, ok := spec.(*ast.TypeSpec)
-					if !ok || !validator.ValidateResponseModelName(typeSpec.Name.Name) {
+					if !ok {
+						continue
+					}
+
+					modelName := typeSpec.Name.Name
+					isRequestModel := strings.HasSuffix(modelName, "RequestModel")
+					isResponseModel := strings.HasSuffix(modelName, "ResponseModel")
+					if !isRequestModel && !isResponseModel {
 						continue
 					}
 
@@ -37,24 +44,36 @@ func ParseModels(path string) ([]shared.ModelData, error) {
 
 					fields := make(map[string]string)
 					for _, field := range structType.Fields.List {
-
 						fieldType := ""
 						if ident, ok := field.Type.(*ast.Ident); ok {
 							fieldType = ident.Name
 						}
-
 						for _, name := range field.Names {
 							fields[name.Name] = fieldType
 						}
 					}
 
-					models = append(models, shared.ModelData{
-						Name:   typeSpec.Name.Name,
-						Fields: fields,
-					})
+					baseName := strings.TrimSuffix(modelName, "RequestModel")
+					baseName = strings.TrimSuffix(baseName, "ResponseModel")
+
+					if models[baseName] == nil {
+						models[baseName] = &shared.ModelData{Name: baseName}
+					}
+
+					if isRequestModel {
+						models[baseName].RequestFields = fields
+					}
+					if isResponseModel {
+						models[baseName].ResponseFields = fields
+					}
 				}
 			}
 		}
 	}
-	return models, nil
+
+	var result []shared.ModelData
+	for _, model := range models {
+		result = append(result, *model)
+	}
+	return result, nil
 }

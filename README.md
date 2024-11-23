@@ -1,78 +1,69 @@
-
 # Dummy API Generator
 
-`dummy-api-generator` is a Go package designed to dynamically generate dummy APIs based on predefined models. It parses struct definitions in Go files and creates RESTful APIs for testing or prototyping purposes. These APIs return dynamic responses based on the fields defined in the models.
+The **Dummy API Generator** is a tool for automatically generating RESTful APIs based on predefined Go models. It supports both `GET` and `POST` endpoints, enabling quick development and testing of APIs without manually writing routes or logic.
+
+---
 
 ## Features
 
-- **Dynamic API Generation**: Automatically create RESTful APIs for every model with a `ResponseModel` suffix.
-- **Custom Responses**: Generate responses dynamically based on the fields and types defined in the models.
-- **Easy Integration**: Use with the popular Gin framework to quickly spin up a server.
-- **Scalable Design**: Add new models without modifying the codebase—just define your models, and APIs are generated automatically.
-- **Logging**: Informative logs to help you monitor route generation and server activity.
+- **Dynamic API Generation**: Automatically create APIs based on `RequestModel` and `ResponseModel` structs.
+- **GET and POST Requests**:
+  - `GET` requests return dummy responses derived from `ResponseModel`.
+  - `POST` requests validate incoming request bodies against `RequestModel` fields and return dummy responses.
+- **Automatic Validation**:
+  - Validates `POST` requests to ensure the body contains the required fields with correct types.
+  - Returns appropriate error messages for missing or invalid fields.
+- **Flexible Model Parsing**:
+  - Supports multiple models, allowing dynamic generation of multiple endpoints.
+- **Easy Integration**: Works seamlessly with the Gin framework.
 
 ---
 
 ## Installation
 
-1. Install the package using `go get`:
-
+1. **Clone the repository**:
    ```bash
-   go get github.com/DevMaan707/dummy-api-gen
+   git clone https://github.com/DevMaan707/dummy-api-gen.git
    ```
-
-2. Add it to your project:
-
-   ```go
-   import dummyapi "github.com/DevMaan707/dummy-api-gen/dummyApi"
+2. **Install dependencies**:
+   ```bash
+   go mod tidy
    ```
 
 ---
 
 ## Usage
 
-### Directory Structure
+### 1. Define Your Models
 
-Ensure your project structure includes a directory for models. For example:
+Define your models in a separate package (e.g., `models`). Models must follow these conventions:
+- Models ending with `RequestModel` define fields for `POST` request validation.
+- Models ending with `ResponseModel` define fields for the dummy response.
 
-```
-dummy-api-generator/
-├── examples/
-│   ├── models/                # Define your models here
-│       ├── example.go         # Example models file
-├── main.go                    # Entry point for your application
-```
-
-### Example Code
-
-#### Step 1: Define Your Models
-
-Define your models in a `.go` file within the `models` directory. Models must end with `ResponseModel` to be automatically parsed.
+#### Example Models
 
 ```go
-// examples/models/example.go
-
 package models
+
+type ExampleRequestModel struct {
+    Name  string `json:"name"`
+    Email string `json:"email"`
+}
 
 type ExampleResponseModel struct {
     ID    int    `json:"id"`
     Name  string `json:"name"`
     Email string `json:"email"`
 }
-
-type AnotherResponseModel struct {
-    Code    int    `json:"code"`
-    Message string `json:"message"`
-}
 ```
 
-#### Step 2: Set Up Your Main Application
+### 2. Generate APIs
 
-Use the `dummyapi.GenerateAPIs` function to set up routes dynamically.
+Use the `GenerateAPIs` function in your main file to dynamically create routes.
+
+#### Example Main File
 
 ```go
-// examples/main.go
-
 package main
 
 import (
@@ -85,9 +76,10 @@ import (
 func main() {
 	router := gin.Default()
 
+	// Path to models directory
 	modelsPath := "./examples/models"
 
-	// Generate APIs based on models
+	// Generate APIs
 	err := dummyapi.GenerateAPIs(router, modelsPath)
 	if err != nil {
 		log.Fatalf("Error generating APIs: %v", err)
@@ -100,65 +92,69 @@ func main() {
 }
 ```
 
-#### Step 3: Run the Server
+---
 
-1. Start the server:
+## API Endpoints
 
-   ```bash
-   go run examples/main.go
-   ```
+### **GET Request**
+- **URL**: `/api/<ModelName>`
+- **Response**: Dummy response based on the `ResponseModel`.
 
-2. Open your browser or use a tool like Postman to test the APIs.
+#### Example
+For the `ExampleResponseModel`:
 
-   - **Example Endpoint**: `GET http://localhost:8080/api/ExampleResponseModel`
-   - **Response**:
-
-     ```json
-     {
-         "id": 0,
-         "name": "sample_text",
-         "email": "sample_text"
-     }
-     ```
+```json
+{
+    "id": 0,
+    "name": "sample_text",
+    "email": "sample_text"
+}
+```
 
 ---
 
-## How It Works
+### **POST Request**
+- **URL**: `/test/<ModelName>`
+- **Request Body**: Fields must match the `RequestModel`.
+- **Response**: Dummy response based on the `ResponseModel`.
 
-1. **Model Parsing**: The package scans the directory specified by `modelsPath` for structs ending in `ResponseModel`.
-2. **Dynamic API Creation**: For each parsed model, it generates a `GET` endpoint that returns a JSON response based on the model's fields.
-3. **Dynamic Responses**: Field types determine default response values:
-   - `int`: `0`
-   - `string`: `"sample_text"`
-   - Others: `null`
+#### Example
 
----
+##### Request Body:
+```json
+{
+    "name": "John Doe",
+    "email": "john.doe@example.com"
+}
+```
 
-## Features in Detail
+##### Response:
+```json
+{
+    "id": 0,
+    "name": "sample_text",
+    "email": "sample_text"
+}
+```
 
-1. **Automatic Parsing**: You don’t need to configure routes manually. Just define models, and APIs are generated automatically.
-2. **Dynamic Response Values**: Each field in the model is reflected in the API response with default placeholder values.
-3. **Structured Logs**: Logs are generated for every route creation, making it easy to debug or monitor.
-
----
-
-## Limitations
-
-- **Model Naming**: Models must end with `ResponseModel` to be parsed.
-- **Field Types**: Only primitive field types (e.g., `int`, `string`) are currently supported.
+##### Validation Errors:
+- **Missing Field**:
+  ```json
+  {
+      "error": "Missing field: email"
+  }
+  ```
+- **Invalid Type**:
+  ```json
+  {
+      "error": "Invalid type for field: name"
+  }
+  ```
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Feel free to submit issues or pull requests to improve this package.
+Contributions are welcome! Please fork the repository, create a new branch, and submit a pull request.
 
 ---
-
-
-## Author
-
-Created by **Aymaan**. Follow [GitHub](https://github.com/DevMaan707) for more projects.
-
---- 
-
