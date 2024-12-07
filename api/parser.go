@@ -1,4 +1,4 @@
-package parser
+package api
 
 import (
 	"go/ast"
@@ -6,16 +6,18 @@ import (
 	"go/token"
 	"strings"
 
-	"github.com/DevMaan707/dummy-api-gen/internal/shared"
+	"github.com/DevMaan707/dummy-api-gen/shared"
 )
 
 func ParseModels(path string) ([]shared.ModelData, error) {
-	models := map[string]*shared.ModelData{}
 	fs := token.NewFileSet()
 	pkgs, err := parser.ParseDir(fs, path, nil, parser.AllErrors)
 	if err != nil {
 		return nil, err
 	}
+
+	var models []shared.ModelData
+	modelMap := make(map[string]*shared.ModelData)
 
 	for _, pkg := range pkgs {
 		for _, file := range pkg.Files {
@@ -56,24 +58,24 @@ func ParseModels(path string) ([]shared.ModelData, error) {
 					baseName := strings.TrimSuffix(modelName, "RequestModel")
 					baseName = strings.TrimSuffix(baseName, "ResponseModel")
 
-					if models[baseName] == nil {
-						models[baseName] = &shared.ModelData{Name: baseName}
+					if modelMap[baseName] == nil {
+						modelMap[baseName] = &shared.ModelData{Name: baseName}
 					}
 
 					if isRequestModel {
-						models[baseName].RequestFields = fields
+						modelMap[baseName].RequestFields = fields
 					}
 					if isResponseModel {
-						models[baseName].ResponseFields = fields
+						modelMap[baseName].ResponseFields = fields
 					}
 				}
 			}
 		}
 	}
 
-	var result []shared.ModelData
-	for _, model := range models {
-		result = append(result, *model)
+	for _, model := range modelMap {
+		models = append(models, *model)
 	}
-	return result, nil
+
+	return models, nil
 }

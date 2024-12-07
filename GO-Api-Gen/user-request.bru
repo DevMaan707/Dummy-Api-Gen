@@ -1,0 +1,20 @@
+meta {
+  name: user-request
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://localhost:8080/test/User
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "username": "john_doe",
+    "email": "john.doe@example.com",
+    "password": "securePassword123"
+  }
+  
+}

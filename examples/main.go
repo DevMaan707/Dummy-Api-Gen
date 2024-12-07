@@ -2,24 +2,33 @@ package main
 
 import (
 	"log"
+	"net/http"
 
-	dummyapi "github.com/DevMaan707/dummy-api-gen/dummyApi"
+	"github.com/DevMaan707/dummy-api-gen/adapters"
+	"github.com/DevMaan707/dummy-api-gen/api"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	app := gin.Default()
+	router := adapters.NewGinRouter(app)
 
-	router := gin.Default()
+	models, err := api.ParseModels("./models")
+	if err != nil {
+		log.Fatalf("Error parsing models: %v", err)
+	}
 
-	modelsPath := "./examples/models"
-
-	err := dummyapi.GenerateAPIs(router, modelsPath)
+	err = api.GenerateAPIs(router, models)
 	if err != nil {
 		log.Fatalf("Error generating APIs: %v", err)
 	}
 
-	log.Println("Server is running on http://localhost:8080")
+	router.Group("/custom").GET("/hello", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Hello, world!"))
+	})
+
+	log.Println("Server running on http://localhost:8080")
 	if err := router.Run(":8080"); err != nil {
-		log.Fatalf("Failed to start the server: %v", err)
+		log.Fatalf("Failed to start server: %v", err)
 	}
 }
