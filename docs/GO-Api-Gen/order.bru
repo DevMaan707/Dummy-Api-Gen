@@ -1,0 +1,21 @@
+meta {
+  name: order
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://localhost:8080/test/order
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "user_id": 1,
+      "product_id": 101,
+      "quantity": 2,
+      "total_price": 50.00
+  }
+  
+}

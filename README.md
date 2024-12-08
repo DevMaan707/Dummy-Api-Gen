@@ -1,31 +1,32 @@
 # Dummy API Generator
 
-The **Dummy API Generator** is a tool for automatically generating RESTful APIs based on predefined Go models. It supports both `GET` and `POST` endpoints, enabling quick development and testing of APIs without manually writing routes or logic.
+## Overview
+The Dummy API Generator is a Go-based framework designed for generating customizable dummy APIs. It is lightweight, modular, and supports multiple frameworks, including Gin and Fiber. This tool is perfect for rapid prototyping, API testing, and development environments where real backend logic is not yet implemented.
 
 ---
 
-## Features
-
-- **Dynamic API Generation**: Automatically create APIs based on `RequestModel` and `ResponseModel` structs.
-- **GET and POST Requests**:
-  - `GET` requests return dummy responses derived from `ResponseModel`.
-  - `POST` requests validate incoming request bodies against `RequestModel` fields and return dummy responses.
-- **Automatic Validation**:
-  - Validates `POST` requests to ensure the body contains the required fields with correct types.
-  - Returns appropriate error messages for missing or invalid fields.
-- **Flexible Model Parsing**:
-  - Supports multiple models, allowing dynamic generation of multiple endpoints.
-- **Easy Integration**: Works seamlessly with the Gin framework.
+## Key Features
+- **Customizable Responses**:
+  - Define static responses for specific endpoints.
+  - Implement dynamic responses based on incoming request data.
+- **Framework Support**:
+  - Compatible with both Gin and Fiber frameworks.
+- **Modular Design**:
+  - Pass endpoint configurations directly from your application code for maximum flexibility.
+- **Default Responses**:
+  - Automatically generates default mock responses for undefined configurations.
 
 ---
 
 ## Installation
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/DevMaan707/dummy-api-gen.git
+1. Import the package in your Go project:
+   ```go
+   import "github.com/DevMaan707/dummy-api-gen/api"
+   import "github.com/DevMaan707/dummy-api-gen/adapters"
    ```
-2. **Install dependencies**:
+
+3. Install dependencies:
    ```bash
    go mod tidy
    ```
@@ -34,127 +35,90 @@ The **Dummy API Generator** is a tool for automatically generating RESTful APIs 
 
 ## Usage
 
-### 1. Define Your Models
-
-Define your models in a separate package (e.g., `models`). Models must follow these conventions:
-- Models ending with `RequestModel` define fields for `POST` request validation.
-- Models ending with `ResponseModel` define fields for the dummy response.
-
-#### Example Models
+### Step 1: Parse Models
+The `ParseModels` function reads your data models to generate APIs dynamically.
 
 ```go
-package models
-
-type ExampleRequestModel struct {
-    Name  string `json:"name"`
-    Email string `json:"email"`
-}
-
-type ExampleResponseModel struct {
-    ID    int    `json:"id"`
-    Name  string `json:"name"`
-    Email string `json:"email"`
+models, err := api.ParseModels("./models")
+if err != nil {
+    log.Fatalf("Error parsing models: %v", err)
 }
 ```
 
-### 2. Generate APIs
-
-Use the `GenerateAPIs` function in your main file to dynamically create routes.
-
-#### Example Main File
+### Step 2: Define Custom Endpoint Configurations
+Define the response logic for specific endpoints directly in your application:
 
 ```go
-package main
+type EndpointConfig struct {
+    StaticResponse  map[string]interface{}
+    ConditionalLogic func(request map[string]interface{}) map[string]interface{}
+}
 
-import (
-	"log"
+customEndpointConfigs := map[string]*EndpointConfig{
+    "/product": {
+        StaticResponse: map[string]interface{}{
+            "id": 1,
+            "name": "Custom Product",
+            "price": 99.99,
+        },
+    },
+    "/user": {
+        ConditionalLogic: func(request map[string]interface{}) map[string]interface{} {
+            if userID, ok := request["user_id"].(string); ok && userID == "1" {
+                return map[string]interface{}{
+                    "id": 1,
+                    "username": "John Doe",
+                }
+            }
+            return nil
+        },
+    },
+}
+```
 
-	dummyapi "github.com/DevMaan707/dummy-api-gen/dummyApi"
-	"github.com/gin-gonic/gin"
-)
+### Step 3: Generate APIs
+Pass your router, models, and custom configurations to the API generator:
 
-func main() {
-	router := gin.Default()
+```go
+err = api.GenerateAPIsWithConfig(router, models, customEndpointConfigs)
+if err != nil {
+    log.Fatalf("Error generating APIs: %v", err)
+}
+```
 
-	// Path to models directory
-	modelsPath := "./examples/models"
+### Step 4: Run the Server
+Start your server:
 
-	// Generate APIs
-	err := dummyapi.GenerateAPIs(router, modelsPath)
-	if err != nil {
-		log.Fatalf("Error generating APIs: %v", err)
-	}
-
-	log.Println("Server is running on http://localhost:8080")
-	if err := router.Run(":8080"); err != nil {
-		log.Fatalf("Failed to start the server: %v", err)
-	}
+```go
+app := gin.Default()
+router := adapters.NewGinRouter(app)
+if err := router.Run(":8080"); err != nil {
+    log.Fatalf("Failed to start server: %v", err)
 }
 ```
 
 ---
 
-## API Endpoints
-
-### **GET Request**
-- **URL**: `/api/<ModelName>`
-- **Response**: Dummy response based on the `ResponseModel`.
-
-#### Example
-For the `ExampleResponseModel`:
-
+## Example
+```bash
+curl -X GET http://localhost:8080/test/product
+```
+Response:
 ```json
 {
-    "id": 0,
-    "name": "sample_text",
-    "email": "sample_text"
+    "id": 1,
+    "name": "Custom Product",
+    "price": 99.99
 }
 ```
-
----
-
-### **POST Request**
-- **URL**: `/test/<ModelName>`
-- **Request Body**: Fields must match the `RequestModel`.
-- **Response**: Dummy response based on the `ResponseModel`.
-
-#### Example
-
-##### Request Body:
-```json
-{
-    "name": "John Doe",
-    "email": "john.doe@example.com"
-}
-```
-
-##### Response:
-```json
-{
-    "id": 0,
-    "name": "sample_text",
-    "email": "sample_text"
-}
-```
-
-##### Validation Errors:
-- **Missing Field**:
-  ```json
-  {
-      "error": "Missing field: email"
-  }
-  ```
-- **Invalid Type**:
-  ```json
-  {
-      "error": "Invalid type for field: name"
-  }
-  ```
 
 ---
 
 ## Contributing
-
-Contributions are welcome! Please fork the repository, create a new branch, and submit a pull request.
+1. Fork the repository.
+2. Create a feature branch.
+3. Commit your changes.
+4. Open a pull request.
 
 ---
+

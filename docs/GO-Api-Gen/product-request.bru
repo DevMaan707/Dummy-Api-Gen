@@ -1,0 +1,18 @@
+meta {
+  name: product-request
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:8080/test/Product
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "product_id":"1"
+  }
+  
+}

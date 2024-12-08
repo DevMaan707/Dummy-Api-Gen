@@ -23,10 +23,14 @@ type UserAddressResponseModel struct {
 	CreatedAt string `json:"created_at"`
 }
 type OrderResponseModel struct {
-	ID         int     `json:"id"`
-	UserID     int     `json:"user_id"`
-	ProductID  int     `json:"product_id"`
-	Quantity   int     `json:"quantity"`
-	TotalPrice float64 `json:"total_price"`
-	CreatedAt  string  `json:"created_at"`
+	OrderID string `json:"order_id"`
+	Message string `json:"message"`
+}
+
+type OrderDetailsResponseModel struct {
+	OrderID  string  `json:"order_id"`
+	Name     string  `json:"name"`
+	Quantity int     `json:"quantity"`
+	Price    float32 `json:"price"`
+	Status   string  `json:"status"`
 }

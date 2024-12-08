@@ -8,17 +8,16 @@ import (
 	"github.com/DevMaan707/dummy-api-gen/shared"
 )
 
-func GenerateAPIs(router adapters.Router, models []shared.ModelData) error {
+func GenerateAPIsWithConfig(router adapters.Router, models []shared.ModelData, configs map[string]*EndpointConfig) error {
 	apiGroup := router.Group("/test")
 
 	for _, model := range models {
 		path := "/" + model.Name
-
 		apiGroup.GET(path, func(w http.ResponseWriter, r *http.Request) {
-			response := generateMockResponse(model.ResponseFields)
+			var request map[string]interface{}
+			response := generateMockResponseWithConfig(path, model.ResponseFields, request, configs)
 			writeJSONResponse(w, response)
 		})
-
 		if len(model.RequestFields) > 0 {
 			apiGroup.POST(path, func(w http.ResponseWriter, r *http.Request) {
 				var body map[string]interface{}
@@ -26,14 +25,8 @@ func GenerateAPIs(router adapters.Router, models []shared.ModelData) error {
 					http.Error(w, "Invalid request body", http.StatusBadRequest)
 					return
 				}
-				for field, typ := range model.RequestFields {
-					if !validateFieldType(body[field], typ) {
-						http.Error(w, "Invalid field: "+field, http.StatusBadRequest)
-						return
-					}
-				}
 
-				response := generateMockResponse(model.ResponseFields)
+				response := generateMockResponseWithConfig(path, model.ResponseFields, body, configs)
 				writeJSONResponse(w, response)
 			})
 		}
@@ -42,32 +35,37 @@ func GenerateAPIs(router adapters.Router, models []shared.ModelData) error {
 	return nil
 }
 
-func generateMockResponse(fields map[string]string) map[string]interface{} {
+func generateMockResponseWithConfig(endpoint string, fields map[string]string, request map[string]interface{}, configs map[string]*EndpointConfig) map[string]interface{} {
 	response := make(map[string]interface{})
-	for name, typ := range fields {
-		switch typ {
-		case "string":
-			response[name] = "example"
-		case "int":
-			response[name] = 123
-		default:
-			response[name] = nil
+	if config, exists := configs[endpoint]; exists {
+		if config.StaticResponse != nil {
+			for key, value := range config.StaticResponse {
+				response[key] = value
+			}
+			return response
+		}
+		if config.ConditionalLogic != nil {
+			customResponse := config.ConditionalLogic(request)
+			for key, value := range customResponse {
+				response[key] = value
+			}
+			return response
 		}
 	}
-	return response
-}
-
-func validateFieldType(value interface{}, expectedType string) bool {
-	switch expectedType {
-	case "string":
-		_, ok := value.(string)
-		return ok
-	case "int":
-		_, ok := value.(float64)
-		return ok
-	default:
-		return false
+	for name, typ := range fields {
+		if _, exists := response[name]; !exists {
+			switch typ {
+			case "string":
+				response[name] = "example"
+			case "int":
+				response[name] = 123
+			default:
+				response[name] = nil
+			}
+		}
 	}
+
+	return response
 }
 
 func writeJSONResponse(w http.ResponseWriter, data interface{}) {
