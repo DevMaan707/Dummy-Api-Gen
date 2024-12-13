@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/DevMaan707/dummy-api-gen/adapters"
-	"github.com/DevMaan707/dummy-api-gen/api"
+	"github.com/DevMaan707/faux-api/adapters"
+	"github.com/DevMaan707/faux-api/api"
 	"github.com/gin-gonic/gin"
 )
 
