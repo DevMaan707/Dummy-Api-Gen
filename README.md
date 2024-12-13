@@ -1,7 +1,7 @@
-# Dummy API Generator
+# Faux API
 
 ## Overview
-The Dummy API Generator is a Go-based framework designed for generating customizable dummy APIs. It is lightweight, modular, and supports multiple frameworks, including Gin and Fiber. This tool is perfect for rapid prototyping, API testing, and development environments where real backend logic is not yet implemented.
+The Faux API is a Go-based framework designed for generating customizable dummy APIs. It is lightweight, modular, and supports multiple frameworks, including Gin and Fiber. This tool is perfect for rapid prototyping, API testing, and development environments where real backend logic is not yet implemented.
 
 ---
 
