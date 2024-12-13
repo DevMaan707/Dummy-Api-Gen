@@ -6,7 +6,7 @@ import (
 	"go/token"
 	"strings"
 
-	"github.com/DevMaan707/dummy-api-gen/shared"
+	"github.com/DevMaan707/faux-api/shared"
 )
 
 func ParseModels(path string) ([]shared.ModelData, error) {
