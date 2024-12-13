@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/DevMaan707/dummy-api-gen/adapters"
-	"github.com/DevMaan707/dummy-api-gen/shared"
+	"github.com/DevMaan707/faux-api/adapters"
+	"github.com/DevMaan707/faux-api/shared"
 )
 
 func GenerateAPIsWithConfig(router adapters.Router, models []shared.ModelData, configs map[string]*EndpointConfig) error {
