@@ -1,4 +1,4 @@
-module github.com/DevMaan707/dummy-api-gen
+module github.com/DevMaan707/faux-api
 
 go 1.23.3
 
