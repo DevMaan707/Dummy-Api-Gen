@@ -22,8 +22,8 @@ The Faux API is a Go-based framework designed for generating customizable dummy 
 
 1. Import the package in your Go project:
    ```go
-   import "github.com/DevMaan707/dummy-api-gen/api"
-   import "github.com/DevMaan707/dummy-api-gen/adapters"
+   import "github.com/DevMaan707/faux-api/api"
+   import "github.com/DevMaan707/faux-api/adapters"
    ```
 
 3. Install dependencies:
